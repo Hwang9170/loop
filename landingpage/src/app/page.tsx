@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { LineChart as RLineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -240,6 +240,19 @@ const faqItems = [
 
 const ContactForm = () => {
   const [state, handleSubmit] = useForm('xblzknnb')
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (state.errors) {
+      setSubmitError('잠시 후 다시 시도해주세요. 네트워크 상태를 확인하거나 직접 이메일을 보내주세요.')
+    }
+  }, [state.errors])
+
+  useEffect(() => {
+    if (state.succeeded) {
+      setSubmitError(null)
+    }
+  }, [state.succeeded])
 
   if (state.succeeded) {
     return (
@@ -267,7 +280,18 @@ const ContactForm = () => {
         </p>
       </CardHeader>
       <CardContent className="pt-0">
-        <form className="grid gap-4" onSubmit={handleSubmit}>
+        <form
+          className="grid gap-4"
+          onSubmit={async (event) => {
+            setSubmitError(null)
+            try {
+              await handleSubmit(event)
+            } catch (error) {
+              setSubmitError('잠시 후 다시 시도해주세요. 네트워크 상태를 확인하거나 직접 이메일을 보내주세요.')
+              console.error('Form submission failed', error)
+            }
+          }}
+        >
           <div className="grid gap-2">
             <label htmlFor="email" className="text-sm font-medium text-gray-800">
               이메일
@@ -287,6 +311,9 @@ const ContactForm = () => {
             />
             <ValidationError prefix="Message" field="message" errors={state.errors} className="text-sm text-red-500" />
           </div>
+          {submitError && (
+            <p className="rounded-2xl bg-red-50 px-4 py-2 text-sm text-red-600">{submitError}</p>
+          )}
           <Button type="submit" disabled={state.submitting} className="justify-center">
             {state.submitting ? '보내는 중...' : '베타 참여 신청'}
             <ArrowUpRight className="h-4 w-4" />
@@ -301,6 +328,11 @@ export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [openAccordion, setOpenAccordion] = useState<string | null>('item-1')
   const [activeLoop, setActiveLoop] = useState(loopSteps[0].id)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const moodTrend = [
     { day: 'Mon', mood: 62 },
@@ -483,17 +515,21 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <div className="h-60">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RLineChart data={moodTrend}>
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} stroke="#94a3b8" />
-                      <YAxis domain={[0, 100]} hide />
-                      <Tooltip
-                        cursor={{ stroke: '#cbd5f5', strokeWidth: 2 }}
-                        contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', padding: '12px' }}
-                      />
-                      <Line type="monotone" dataKey="mood" stroke="#2563eb" strokeWidth={3} dot={{ r: 3 }} />
-                    </RLineChart>
-                  </ResponsiveContainer>
+                  {isMounted ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RLineChart data={moodTrend}>
+                        <XAxis dataKey="day" axisLine={false} tickLine={false} stroke="#94a3b8" />
+                        <YAxis domain={[0, 100]} hide />
+                        <Tooltip
+                          cursor={{ stroke: '#cbd5f5', strokeWidth: 2 }}
+                          contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', padding: '12px' }}
+                        />
+                        <Line type="monotone" dataKey="mood" stroke="#2563eb" strokeWidth={3} dot={{ r: 3 }} />
+                      </RLineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-gray-400">차트를 불러오는 중...</div>
+                  )}
                 </div>
                 <div className="mt-4 grid gap-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
@@ -621,17 +657,21 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent>
               <div className="h-64 rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RLineChart data={moodTrend}>
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} stroke="#94a3b8" />
-                    <YAxis domain={[0, 100]} hide />
-                    <Tooltip
-                      cursor={{ stroke: '#cbd5f5', strokeWidth: 2 }}
-                      contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', padding: '12px' }}
-                    />
-                    <Line type="monotone" dataKey="mood" stroke="#4f46e5" strokeWidth={3} dot={false} />
-                  </RLineChart>
-                </ResponsiveContainer>
+                {isMounted ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RLineChart data={moodTrend}>
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} stroke="#94a3b8" />
+                      <YAxis domain={[0, 100]} hide />
+                      <Tooltip
+                        cursor={{ stroke: '#cbd5f5', strokeWidth: 2 }}
+                        contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', padding: '12px' }}
+                      />
+                      <Line type="monotone" dataKey="mood" stroke="#4f46e5" strokeWidth={3} dot={false} />
+                    </RLineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-blue-500/80">리포트를 준비하는 중...</div>
+                )}
               </div>
               <ul className="mt-6 grid gap-3 text-sm text-gray-600">
                 {reportHighlights.map((highlight) => (
