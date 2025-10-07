@@ -454,7 +454,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6 }}
               className="text-4xl font-bold leading-tight text-gray-900 md:text-5xl"
             >
-              감정을 기록하면, <span className="text-blue-600">나를 데이터로 이해</span>하게 됩니다.
+              감정을 기록하면, <span className="text-blue-600"><br></br>나를 데이터로 이해</span>하게 됩니다.
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
